@@ -20,7 +20,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--v-noite); color: #fff; overflow-x: hidden; }
 
-        /* Splash Screen */
         #splash {
             position: fixed; inset: 0; background: var(--v-noite);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -43,7 +42,6 @@
         .section-header hr { flex: 1; border: 0; border-top: 1px solid rgba(212,175,55,0.3); }
         .section-title { font-family: 'Cinzel'; color: var(--ouro-brilho); font-size: 1.2rem; font-weight: 700; text-transform: uppercase; }
 
-        /* Estilo do Card Sem PNG */
         .card-item {
             background: linear-gradient(145deg, var(--v-imperial), #021a14);
             border: var(--borda); border-radius: 15px; margin-bottom: 20px;
@@ -66,7 +64,6 @@
             font-weight: 700; border: 1px solid var(--ouro-base); display: inline-block;
         }
 
-        /* Carrinho e Checkout */
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: none; align-items: flex-end; }
         .sheet {
             width: 100%; background: var(--v-imperial); border-top: 5px solid var(--ouro-base);
@@ -81,7 +78,7 @@
 
         .sel-box { 
             background: rgba(255,255,255,0.03); border: 1px solid rgba(212, 175, 55, 0.2); 
-            padding: 18px; margin-bottom: 12px; border-radius: 12px; display: flex; justify-content: space-between;
+            padding: 18px; margin-bottom: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;
         }
         .sel-box.active { background: rgba(212, 175, 55, 0.25); border-color: var(--ouro-brilho); }
 
@@ -97,6 +94,12 @@
             display: none; justify-content: space-between; border-radius: 15px; 
             font-weight: 900; z-index: 1000;
         }
+
+        .btn-choice {
+            padding: 10px; border-radius: 8px; border: 1px solid var(--ouro-base);
+            background: rgba(0,0,0,0.3); color: white; flex: 1; text-align: center; font-weight: bold;
+        }
+        .btn-choice.active { background: var(--ouro-base); color: black; }
     </style>
 </head>
 <body>
@@ -137,8 +140,7 @@
     <div class="sheet">
         <h2 style="color:var(--ouro-brilho); margin-bottom:25px; text-align:center; font-family:'Cinzel'">Finalizar Pedido</h2>
         <div id="checkout-endereco">
-            <input type="text" id="end-nome" class="input-detalhado" placeholder="Seu Nome">
-            
+            <input type="text" id="end-nome" class="input-detalhado" placeholder="Seu Nome / Empresa">
             <div style="display:flex; gap:10px;">
                 <input type="text" id="end-rua" class="input-detalhado" style="flex:3" placeholder="Rua / Avenida">
                 <input type="text" id="end-num" class="input-detalhado" style="flex:1" placeholder="Nº">
@@ -146,15 +148,24 @@
             <input type="text" id="end-bairro" class="input-detalhado" placeholder="Bairro">
             <input type="text" id="end-ponto" class="input-detalhado" placeholder="Ponto de Referência (Opcional)">
         </div>
+        
         <div id="resumo-carrinho" style="margin: 20px 0; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.1);"></div>
+        
         <p style="color:var(--ouro-base); font-size:11px; margin-bottom:10px; font-weight:700;">FORMA DE PAGAMENTO</p>
         <div style="display:flex; gap:10px; margin-bottom:15px;">
             <div class="sel-box" style="flex:1" onclick="handlePagamento('Pix', this)">PIX</div>
             <div class="sel-box" style="flex:1" onclick="handlePagamento('Dinheiro', this)">DINHEIRO</div>
         </div>
-        <div id="troco-pergunta" style="display:none; background: rgba(212,175,55,0.08); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-            <input type="number" id="troco-valor" class="input-detalhado" placeholder="Troco para quanto?">
+
+        <div id="area-troco" style="display:none; background: rgba(212,175,55,0.08); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+            <p style="color:var(--ouro-brilho); font-size:13px; margin-bottom:10px; font-weight:700; text-align:center;">PRECISA DE TROCO?</p>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <div class="btn-choice" id="choice-sim" onclick="setTroco(true)">SIM</div>
+                <div class="btn-choice" id="choice-nao" onclick="setTroco(false)">NÃO</div>
+            </div>
+            <input type="number" id="troco-valor" class="input-detalhado" placeholder="Troco para quanto?" style="display:none; margin-top:10px;">
         </div>
+
         <button id="final-btn" class="btn-premium" onclick="enviarWhatsApp()">🚀 ENVIAR NO WHATSAPP</button>
         <p onclick="fechar()" style="text-align:center; color:var(--ouro-base); margin-top:20px; cursor:pointer;">CONTINUAR COMPRANDO</p>
     </div>
@@ -173,7 +184,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// DADOS DO CARDÁPIO
 const caldos = [
     { id: 1, letra: "C", nome: "Caldo Cuiabano", p350: 15, p500: 25, d: "Caldo grosso de mandioca com carne moída bem temperada e cheiro verde." },
     { id: 2, letra: "M", nome: "Caldo de Milho", p350: 18, p500: 25, d: "Caldo de milho batido com frango desfiado e pedacinhos de bacon." },
@@ -190,8 +200,8 @@ let cart = [];
 let pagSel = '';
 let itemTemp = null;
 let tSel = null;
+let precisaTroco = null;
 
-// RENDERIZAÇÃO
 const listC = document.getElementById('lista-caldos');
 caldos.forEach(i => {
     listC.innerHTML += `
@@ -256,8 +266,26 @@ function atualizarTotal() {
 function abrirCheckout() {
     const res = document.getElementById('resumo-carrinho');
     const sub = cart.reduce((a, b) => a + (b.p * b.q), 0);
-    res.innerHTML = cart.map(i => `<div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;"><span>${i.q}x ${i.n}</span><b>R$ ${(i.p*i.q).toFixed(2)}</b></div>`).join('') + 
-    `<div style="border-top: 1px solid rgba(212,175,55,0.2); margin-top:10px; padding-top:10px; font-weight:900; color:var(--ouro-brilho); display:flex; justify-content:space-between;"><span>TOTAL (c/ Entrega)</span><span>R$ ${(sub+7).toFixed(2)}</span></div>`;
+    
+    let htmlResumo = cart.map(i => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+            <span>${i.q}x ${i.n}</span>
+            <b>R$ ${(i.p*i.q).toFixed(2)}</b>
+        </div>
+    `).join('');
+    
+    htmlResumo += `
+        <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:13px; color:var(--ouro-base); border-top: 1px solid rgba(212,175,55,0.1); padding-top:10px;">
+            <span>Taxa de Entrega</span>
+            <b>R$ 7,00</b>
+        </div>
+        <div style="border-top: 1px solid rgba(212,175,55,0.2); margin-top:10px; padding-top:10px; font-weight:900; color:var(--ouro-brilho); display:flex; justify-content:space-between;">
+            <span>TOTAL</span>
+            <span>R$ ${(sub+7).toFixed(2)}</span>
+        </div>
+    `;
+    
+    res.innerHTML = htmlResumo;
     document.getElementById('checkout-overlay').style.display = 'flex';
 }
 
@@ -265,34 +293,52 @@ function handlePagamento(p, el) {
     pagSel = p;
     document.querySelectorAll('#checkout-overlay .sel-box').forEach(x => x.classList.remove('active'));
     el.classList.add('active');
-    document.getElementById('troco-pergunta').style.display = p === 'Dinheiro' ? 'block' : 'none';
+    
+    // Mostra/Esconde área do troco
+    document.getElementById('area-troco').style.display = p === 'Dinheiro' ? 'block' : 'none';
+    precisaTroco = null;
+    document.getElementById('troco-valor').style.display = 'none';
+    document.querySelectorAll('.btn-choice').forEach(b => b.classList.remove('active'));
+}
+
+function setTroco(val) {
+    precisaTroco = val;
+    document.getElementById('choice-sim').classList.toggle('active', val === true);
+    document.getElementById('choice-nao').classList.toggle('active', val === false);
+    document.getElementById('troco-valor').style.display = val === true ? 'block' : 'none';
 }
 
 function fechar() { document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none'); tSel = null; }
 
 async function enviarWhatsApp() {
-    const nomeCli = document.getElementById('end-nome').value; // PEGA O NOME
+    const nomeCli = document.getElementById('end-nome').value;
     const rua = document.getElementById('end-rua').value;
     const num = document.getElementById('end-num').value;
     const bairro = document.getElementById('end-bairro').value;
+    const trocoVal = document.getElementById('troco-valor').value;
     
     if(!nomeCli || !rua || !num || !bairro || !pagSel) return alert("Preencha Nome, Endereço e Pagamento!");
+    if(pagSel === 'Dinheiro' && precisaTroco === null) return alert("Informe se precisa de troco!");
+    if(precisaTroco === true && !trocoVal) return alert("Informe o valor para o troco!");
 
     const sub = cart.reduce((a, b) => a + (b.p * b.q), 0);
     const total = (sub + 7).toFixed(2);
     const itensTxt = cart.map(i => `${i.q}x ${i.n}`).join(', ');
 
+    let txtTroco = pagSel === 'Dinheiro' ? (precisaTroco ? `Sim (Troco para R$ ${trocoVal})` : 'Não') : 'N/A';
+
     try {
         await db.collection("pedidos").add({
-            cliente: nomeCli, // SALVA O NOME NO FIREBASE
+            cliente: nomeCli,
             itens: itensTxt,
             endereco: { rua, numero: num, bairro, ponto: document.getElementById('end-ponto').value },
             pagamento: pagSel,
+            troco: txtTroco,
             total: total,
             data: new Date().toLocaleString('pt-BR')
         });
 
-        let msg = `*NOVO PEDIDO - CALDOS PAES*\n\n*CLIENTE:* ${nomeCli}\n*ITENS:* ${itensTxt}\n\n📍 *ENTREGA:* ${rua}, ${num}\n🏘 Bairro: ${bairro}\n💳 *PAGAMENTO:* ${pagSel}\n💰 *TOTAL: R$ ${total}*`;
+        let msg = `*NOVO PEDIDO - CALDOS PAES*\n\n*CLIENTE:* ${nomeCli}\n*ITENS:* ${itensTxt}\n\n🛵 *TAXA DE ENTREGA:* R$ 7,00\n📍 *ENTREGA:* ${rua}, ${num}\n🏘 Bairro: ${bairro}\n💳 *PAGAMENTO:* ${pagSel}\n💰 *TROCO:* ${txtTroco}\n💵 *TOTAL: R$ ${total}*`;
         window.open(`https://wa.me/5566992168397?text=${encodeURIComponent(msg)}`);
     } catch (e) { alert("Erro ao salvar pedido!"); }
 }

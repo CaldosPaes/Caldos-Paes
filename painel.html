@@ -2,228 +2,221 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Imperial - Caldos Paes</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Painel Administrativo | Caldos Paes</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --verde-escuro: #0a2f1f;
-            --dourado: #d4af37;
-            --dourado-brilho: #f9e29d;
-            --preto-fundo: #051a11;
+            --v-noite: #010d0a;
+            --v-imperial: #04241c;
+            --ouro: #d4af37;
+            --ouro-brilho: #f3d9a1;
+            --sucesso: #2ecc71;
+            --alerta: #f1c40f;
+            --perigo: #e74c3c;
         }
 
-        body { 
-            font-family: 'Georgia', serif; 
-            background: var(--preto-fundo); 
-            color: var(--dourado); 
-            margin: 0; padding: 0; 
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background: var(--v-noite); color: #fff; padding-bottom: 50px; }
+
+        /* HEADER PROFISSIONAL */
+        .top-bar {
+            background: var(--v-imperial); border-bottom: 2px solid var(--ouro);
+            padding: 20px; text-align: center; position: sticky; top: 0; z-index: 100;
+        }
+        .top-bar h1 { font-family: 'Cinzel'; color: var(--ouro-brilho); font-size: 1.5rem; letter-spacing: 2px; }
+
+        /* DASHBOARD DE RELATÓRIO */
+        .dashboard {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px;
+        }
+        .stat-card {
+            background: linear-gradient(145deg, #053025, #021a14);
+            border: 1px solid rgba(212, 175, 55, 0.3); padding: 15px; border-radius: 12px;
+            text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .stat-card span { font-size: 0.7rem; color: var(--ouro); font-weight: 900; text-transform: uppercase; }
+        .stat-card div { font-size: 1.2rem; font-weight: 900; margin-top: 5px; color: #fff; }
+
+        /* FILA DE PEDIDOS */
+        .order-list { padding: 15px; }
+        .order-card {
+            background: var(--v-imperial); border-left: 5px solid var(--ouro);
+            border-radius: 8px; padding: 20px; margin-bottom: 20px;
+            position: relative; animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .order-card.pendente { border-left-color: var(--alerta); box-shadow: 0 0 15px rgba(241, 196, 15, 0.1); }
+        .order-card.preparando { border-left-color: #3498db; }
+        .order-card.entregue { border-left-color: var(--sucesso); opacity: 0.8; }
+
+        .badge {
+            position: absolute; top: 15px; right: 15px; font-size: 0.6rem;
+            padding: 4px 8px; border-radius: 4px; font-weight: 900;
         }
 
-        header { 
-            background: var(--verde-escuro); 
-            padding: 25px; 
-            text-align: center; 
-            border-bottom: 3px solid var(--dourado);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        .client-info b { color: var(--ouro-brilho); font-size: 1.1rem; }
+        .order-details { font-size: 0.9rem; margin: 15px 0; color: #cbd5d3; line-height: 1.5; }
+        
+        .address-box {
+            background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px;
+            font-size: 0.85rem; border: 1px dashed rgba(212, 175, 55, 0.2);
         }
 
-        .main-container { max-width: 1100px; margin: 20px auto; padding: 20px; }
-
-        /* Dashboard */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .stat-card { 
-            background: var(--verde-escuro); 
-            padding: 20px; 
-            border-radius: 12px; 
-            border: 1px solid var(--dourado);
-            text-align: center; 
+        /* BOTÕES DE AÇÃO */
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+        .btn {
+            padding: 12px; border: none; border-radius: 6px; font-weight: 900;
+            font-size: 0.7rem; cursor: pointer; text-transform: uppercase;
+            transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;
         }
-        .stat-card p { font-size: 28px; font-weight: bold; margin: 10px 0; color: var(--dourado-brilho); }
+        .btn-main { background: var(--ouro-brilho); color: #000; grid-column: span 2; }
+        .btn-wa { background: #25d366; color: #fff; }
+        .btn-cancel { background: rgba(231, 76, 60, 0.2); color: var(--perigo); border: 1px solid var(--perigo); }
 
-        /* Controles */
-        .controls { 
-            background: var(--verde-escuro); 
-            padding: 15px; 
-            border-radius: 10px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 20px;
-            border: 1px solid var(--dourado);
-        }
-        input[type="month"] { 
-            background: #124d34; border: 1px solid var(--dourado); color: white; padding: 8px; border-radius: 5px; 
-        }
-
-        /* Tabela */
-        .table-container { background: var(--verde-escuro); border-radius: 10px; overflow: hidden; border: 1px solid var(--dourado); }
-        table { width: 100%; border-collapse: collapse; }
-        thead { background: var(--dourado); color: var(--verde-escuro); }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(212, 175, 55, 0.2); }
-
-        /* Botões */
-        .btn-print { background: var(--dourado); color: var(--verde-escuro); border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-fechar { 
-            background: #b71c1c; color: white; border: 1px solid var(--dourado); padding: 10px 20px; 
-            cursor: pointer; border-radius: 5px; font-weight: bold; display: none; 
-        }
-        .btn-fechar:hover { background: #ff0000; box-shadow: 0 0 10px red; }
-
-        @media print {
-            body * { visibility: hidden; }
-            #cupom-print, #cupom-print * { visibility: visible; }
-            #cupom-print { position: absolute; left: 0; top: 0; width: 80mm; color: black; background: white; padding: 10px; }
+        .btn-reset-mes {
+            background: transparent; border: 1px solid var(--perigo); color: var(--perigo);
+            margin: 20px; width: calc(100% - 40px); padding: 10px; font-size: 0.7rem;
         }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>⚜️ Caldos Paes Imperial ⚜️</h1>
-</header>
+    <div class="top-bar">
+        <h1>CALDOS PAES ADMIN</h1>
+    </div>
 
-<div class="main-container">
-    <div class="stats-grid">
+    <div class="dashboard">
         <div class="stat-card">
-            <h3>Faturamento Aberto</h3>
-            <p id="total-mes">R$ 0,00</p>
+            <span>Vendas (Bruto)</span>
+            <div id="bruto">R$ 0,00</div>
         </div>
         <div class="stat-card">
-            <h3>Pedidos no Período</h3>
-            <p id="pedidos-total">0</p>
+            <span>Mês Atual</span>
+            <div id="mes-nome">---</div>
+        </div>
+        <div class="stat-card" style="grid-column: span 2;">
+            <span>Volume de Pedidos</span>
+            <div id="qtd-total">0 pedidos</div>
         </div>
     </div>
 
-    <div class="controls">
-        <div>
-            <strong>MÊS: </strong>
-            <input type="month" id="filtro-mes" onchange="carregarDados()">
+    <div class="order-list" id="lista-pedidos">
         </div>
-        <button id="btn-fechar-mes" class="btn-fechar" onclick="fecharMes()">FECHAR MÊS ATUAL</button>
-    </div>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>DATA</th>
-                    <th>CLIENTE</th>
-                    <th>PEDIDO</th>
-                    <th>TOTAL</th>
-                    <th>AÇÃO</th>
-                </tr>
-            </thead>
-            <tbody id="lista-pedidos"></tbody>
-        </table>
-    </div>
-</div>
+    <button class="btn-reset-mes" onclick="fecharMes()">ENCERRAR MÊS ATUAL</button>
 
-<div id="cupom-print" style="display:none; font-family: monospace;"></div>
+    <audio id="notificacao-som" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
 
 <script>
-    // ======= CONFIGURAÇÕES FIREBASE =======
     const firebaseConfig = {
-        apiKey: "SUA_API_KEY",
-        authDomain: "SEU_PROJETO.firebaseapp.com",
-        databaseURL: "https://SEU_PROJETO.firebaseio.com",
-        projectId: "SEU_PROJETO",
-        storageBucket: "SEU_PROJETO.appspot.com",
-        messagingSenderId: "SENDER_ID",
-        appId: "APP_ID"
+        apiKey: "AIzaSyAPvJJ9_O8GgLx3f7bCdbNfhzwuNwFBCuw",
+        authDomain: "caldos-paes.firebaseapp.com",
+        projectId: "caldos-paes",
+        storageBucket: "caldos-paes.firebasestorage.app",
+        messagingSenderId: "926863375495",
+        appId: "1:926863375495:web:635a5b8986b986deeb4c22"
     };
-    // ======================================
-
     firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+    const db = firebase.firestore();
 
-    const inputMes = document.getElementById('filtro-mes');
-    inputMes.value = new Date().toISOString().substring(0, 7);
+    let ultimoPedidoId = null;
 
-    function carregarDados() {
-        const mesFiltro = inputMes.value;
-        const mesAtualReal = new Date().toISOString().substring(0, 7);
-        const btn = document.getElementById('btn-fechar-mes');
+    // Nomes dos meses
+    const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    document.getElementById('mes-nome').innerText = meses[new Date().getMonth()];
 
-        // Só mostra o botão se for o mês em que estamos
-        btn.style.display = (mesFiltro === mesAtualReal) ? "block" : "none";
+    // ESCUTA EM TEMPO REAL
+    db.collection("pedidos").orderBy("data", "desc").onSnapshot((snapshot) => {
+        const list = document.getElementById('lista-pedidos');
+        let totalBruto = 0;
+        let qtd = 0;
+        
+        // Alerta sonoro para novo pedido
+        if (ultimoPedidoId && snapshot.docs[0] && snapshot.docs[0].id !== ultimoPedidoId) {
+            document.getElementById('notificacao-som').play().catch(e => console.log("Som bloqueado pelo navegador"));
+        }
+        if (snapshot.docs[0]) ultimoPedidoId = snapshot.docs[0].id;
 
-        database.ref('pedidos').on('value', (snapshot) => {
-            const lista = document.getElementById('lista-pedidos');
-            lista.innerHTML = "";
-            let faturamento = 0;
-            let total = 0;
+        list.innerHTML = "";
 
-            snapshot.forEach((item) => {
-                const p = item.val();
-                if(!p.data) return;
+        snapshot.forEach((doc) => {
+            const p = doc.data();
+            const id = doc.id;
+            const valor = parseFloat(p.total.replace(',', '.'));
+            totalBruto += valor;
+            qtd++;
 
-                const dataP = new Date(p.data);
-                const mesP = dataP.toISOString().substring(0, 7);
+            const status = p.status || 'Pendente';
+            const statusClass = status.toLowerCase().replace(' ', '');
 
-                if (mesP === mesFiltro) {
-                    // Ignora pedidos que já foram fechados pelo botão
-                    if(p.statusFechado) return;
+            let botaoFluxo = '';
+            if(status === 'Pendente') {
+                botaoFluxo = `<button class="btn btn-main" onclick="atualizar('${id}', 'Preparando')">👨‍🍳 INICIAR PREPARO</button>`;
+            } else if(status === 'Preparando') {
+                botaoFluxo = `<button class="btn btn-main" style="background:var(--sucesso)" onclick="atualizar('${id}', 'A Caminho')">🛵 SAIU PARA ENTREGA</button>`;
+            }
 
-                    faturamento += parseFloat(p.total);
-                    total++;
+            list.innerHTML += `
+                <div class="order-card ${statusClass}">
+                    <div class="badge ${statusClass}">${status}</div>
+                    <div class="client-info">
+                        <b>${p.cliente}</b><br>
+                        <small style="color:#888">${p.data}</small>
+                    </div>
+                    
+                    <div class="order-details">
+                        ${p.itens.split(',').map(i => `• ${i.trim()}<br>`).join('')}
+                    </div>
 
-                    const row = `
-                        <tr>
-                            <td>${dataP.toLocaleDateString()}</td>
-                            <td>${p.cliente}</td>
-                            <td style="font-size:12px">${p.itens}</td>
-                            <td style="color:var(--dourado-brilho)">R$ ${parseFloat(p.total).toFixed(2)}</td>
-                            <td><button class="btn-print" onclick="imprimir('${item.key}')">🖨️</button></td>
-                        </tr>
-                    `;
-                    lista.insertAdjacentHTML('afterbegin', row);
-                }
-            });
+                    <div class="address-box">
+                        📍 ${p.endereco.rua}, ${p.endereco.num || p.endereco.numero} - ${p.endereco.bairro}<br>
+                        <small>💳 Pagamento: ${p.pagamento} ${p.troco ? `(Troco: ${p.troco})` : ''}</small>
+                    </div>
 
-            document.getElementById('total-mes').innerText = `R$ ${faturamento.toFixed(2)}`;
-            document.getElementById('pedidos-total').innerText = total;
+                    <div style="margin-top:15px; font-weight:900; color:var(--ouro-brilho); font-size:1.2rem;">
+                        R$ ${p.total}
+                    </div>
+
+                    <div class="actions">
+                        ${botaoFluxo}
+                        <button class="btn btn-wa" onclick="contatar('${p.cliente}', '${p.total}')">WHATSAPP</button>
+                        <button class="btn btn-cancel" onclick="cancelar('${id}')">CANCELAR</button>
+                    </div>
+                </div>
+            `;
         });
+
+        document.getElementById('bruto').innerText = `R$ ${totalBruto.toFixed(2).replace('.', ',')}`;
+        document.getElementById('qtd-total').innerText = `${qtd} pedidos`;
+    });
+
+    async function atualizar(id, st) {
+        await db.collection("pedidos").doc(id).update({ status: st });
     }
 
-    function fecharMes() {
-        if (confirm("Deseja fechar o faturamento? Isso vai zerar o painel para novos pedidos hoje.")) {
-            const mesAtual = inputMes.value;
-            database.ref('pedidos').once('value', (snapshot) => {
-                snapshot.forEach((item) => {
-                    const p = item.val();
-                    const mesP = new Date(p.data).toISOString().substring(0, 7);
-                    if(mesP === mesAtual) {
-                        database.ref('pedidos/' + item.key).update({ statusFechado: true });
-                    }
-                });
-                alert("Mês fechado! Ouro no bolso e painel limpo.");
-            });
+    async function cancelar(id) {
+        if(confirm("Deseja cancelar e excluir este pedido?")) {
+            await db.collection("pedidos").doc(id).delete();
         }
     }
 
-    function imprimir(id) {
-        database.ref('pedidos/' + id).once('value', (snap) => {
-            const p = snap.val();
-            const area = document.getElementById('cupom-print');
-            area.style.display = 'block';
-            area.innerHTML = `
-                <center><h2>CALDOS PAES IMPERIAL</h2>
-                --------------------------<br>
-                DATA: ${new Date(p.data).toLocaleString()}<br>
-                --------------------------</center>
-                CLIENTE: ${p.cliente}<br>
-                PEDIDO: ${p.itens.replace(/\n/g, '<br>')}<br>
-                --------------------------<br>
-                <strong>TOTAL: R$ ${parseFloat(p.total).toFixed(2)}</strong>
-            `;
-            window.print();
-            area.style.display = 'none';
-        });
+    function contatar(nome, total) {
+        window.open(`https://wa.me/?text=Olá ${nome}, aqui é do Caldos Paes! Recebemos seu pedido de R$ ${total}.`);
     }
 
-    carregarDados();
+    async function fecharMes() {
+        if(confirm("⚠️ ATENÇÃO: Deseja realmente fechar o mês? Todos os pedidos serão apagados para iniciar o relatório do zero!")) {
+            const b = db.batch();
+            const s = await db.collection("pedidos").get();
+            s.forEach(d => b.delete(d.ref));
+            await b.commit();
+            alert("Mês encerrado com sucesso!");
+        }
+    }
 </script>
 </body>
 </html>

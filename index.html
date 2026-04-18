@@ -190,9 +190,9 @@
     const db = firebase.firestore();
 
     const caldos = [
-        { id: 1, letra: "C", nome: "Caldo Cuiabano", p350: 17.99, p500: 24.99, d: "Moda Da Casa." },
-        { id: 2, letra: "M", nome: "Caldo de Milho", p350: 17.99, p500: 24.99, d: "Milho Cremoso." },
-        { id: 3, letra: "F", nome: "Caldo de Feijão", p350: 17.99, p500: 24.99, d: "Saboroso." }
+        { id: 1, letra: "C", nome: "Caldo Cuiabano", p350: 17, p500: 24, d: "Moda Da Casa." },
+        { id: 2, letra: "M", nome: "Caldo de Milho", p350: 17 p500: 24, d: "Milho Cremoso." },
+        { id: 3, letra: "F", nome: "Caldo de Feijão", p350: 17, p500: 24, d: "Saboroso." }
     ];
 
     const acompanhamentos = [
@@ -213,7 +213,7 @@
                 <div class="item-info">
                     <h3>${i.nome}</h3>
                     <p>${i.d}</p>
-                    <div class="price-chip">R$ ${isCaldo ? i.p350 : i.preco},00</div>
+                    <div class="price-chip">R$ ${isCaldo ? i.p350 : i.preco},99</div>
                 </div>
             </div>
         `).join('');

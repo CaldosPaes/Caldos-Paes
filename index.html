@@ -99,7 +99,7 @@
     <div class="sheet">
         <h2 id="size-title"></h2>
         <div id="size-options"></div>
-        <button class="btn-confirm" onclick="confirmarTamanho()">ADICIONAR AO CARRINHO</button>
+        <button class="btn-confirm" onclick="confirmarTamanho()">ADICIONAR</button>
         <p onclick="fechar()" style="text-align:center; color:var(--ouro-velho); margin-top:20px; font-size:0.8rem;">CANCELAR</p>
     </div>
 </div>
@@ -108,10 +108,12 @@
     <div class="sheet">
         <h2>FINALIZAR</h2>
         <div class="input-group"><input type="text" id="end-nome" placeholder="Seu Nome"></div>
+        
         <div style="display:flex; gap:10px;" class="input-group">
-            <input type="text" id="end-rua" style="flex:3" placeholder="Rua e Bairro">
+            <input type="text" id="end-rua" style="flex:3" placeholder="Nome da Rua">
             <input type="text" id="end-num" style="flex:1" placeholder="Nº">
         </div>
+        <div class="input-group"><input type="text" id="end-bairro" placeholder="Seu Bairro"></div>
 
         <div id="resumo-carrinho" class="resumo-card"></div>
 
@@ -132,8 +134,8 @@
             </div>
         </div>
 
-        <button class="btn-confirm" onclick="enviarWhatsApp()">ENVIAR PELO WHATSAPP</button>
-        <p onclick="fechar()" style="text-align:center; color:var(--ouro-velho); margin-top:20px; font-size:0.8rem;">VOLTAR AO MENU</p>
+        <button class="btn-confirm" onclick="enviarWhatsApp()">ENVIAR PEDIDO</button>
+        <p onclick="fechar()" style="text-align:center; color:var(--ouro-velho); margin-top:20px; font-size:0.8rem;">VOLTAR</p>
     </div>
 </div>
 
@@ -222,7 +224,7 @@
             <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>${i.q}x ${i.n}</span><b>R$ ${(i.p*i.q).toFixed(2)}</b></div>
         `).join('') + `
             <div style="display:flex; justify-content:space-between; margin-top:10px; color:var(--ouro-velho)"><span>Taxa Entrega</span><b>R$ 7,00</b></div>
-            <div style="margin-top:10px; padding-top:10px; border-top:1px solid #444; font-weight:900; color:var(--ouro-vivido); display:flex; justify-content:space-between; font-size:1rem;"><span>TOTAL</span><span>R$ ${(sub+7).toFixed(2)}</span></div>
+            <div style="margin-top:10px; padding-top:10px; border-top:1px solid #444; font-weight:900; color:var(--ouro-vivido); display:flex; justify-content:space-between;"><span>TOTAL</span><span>R$ ${(sub+7).toFixed(2)}</span></div>
         `;
         document.getElementById('checkout-overlay').style.display = 'flex';
     }
@@ -248,8 +250,11 @@
     async function enviarWhatsApp() {
         const nome = document.getElementById('end-nome').value;
         const rua = document.getElementById('end-rua').value;
+        const num = document.getElementById('end-num').value;
+        const bairro = document.getElementById('end-bairro').value;
         const trocoValor = document.getElementById('valor-troco').value;
-        if(!nome || !rua || !pagSel) return alert("Preencha todos os campos!");
+        
+        if(!nome || !rua || !bairro || !pagSel) return alert("Preencha Nome, Rua, Bairro e Pagamento!");
         if(precisaTroco && !trocoValor) return alert("Informe o valor para o troco!");
 
         const sub = cart.reduce((a, b) => a + (b.p * b.q), 0);
@@ -259,10 +264,10 @@
 
         await db.collection("pedidos").add({
             cliente: nome, itens: itensTxt, total: total, pagamento: pagSel, troco: infoTroco, status: 'Pendente',
-            endereco: { rua: rua, num: document.getElementById('end-num').value }, data: new Date().toLocaleString('pt-BR')
+            endereco: { rua: rua, num: num, bairro: bairro }, data: new Date().toLocaleString('pt-BR')
         });
 
-        const msg = `*CALDOS PAES*\n\n*Cliente:* ${nome}\n*Pedido:* ${itensTxt}\n*Total:* R$ ${total}\n*Pagamento:* ${pagSel}\n*Troco:* ${infoTroco}\n*Endereço:* ${rua}, ${document.getElementById('end-num').value}`;
+        const msg = `*CALDOS PAES*\n\n*Cliente:* ${nome}\n*Pedido:* ${itensTxt}\n*Total:* R$ ${total}\n*Pagamento:* ${pagSel}\n*Troco:* ${infoTroco}\n*Endereço:* ${rua}, Nº ${num}\n*Bairro:* ${bairro}`;
         window.open(`https://wa.me/5566992168397?text=${encodeURIComponent(msg)}`);
     }
 
